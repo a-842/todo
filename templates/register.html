@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head><title>Register</title></head>
+<body>
+    <h1>Register</h1>
+    <form id="password-form" method="POST">
+        <input type="email" name="email" placeholder="Email" required>
+        <input type="text" name="name" placeholder="Name" required>
+        <input type="password" id="password" name="password" placeholder="Password" required>
+        <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm Password" required>
+        <p id="error-message" style="color: red;"></p>
+        <button type="submit">Register</button>
+    </form>
+
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.getElementById("password-form");
+            const password = document.getElementById("password");
+            const confirmPassword = document.getElementById("confirm_password");
+            const errorMessage = document.getElementById("error-message");
+
+            form.addEventListener("submit", function (event) {
+                errorMessage.textContent = ""; // Clear previous errors
+
+                if (password.value.length < 8) {
+                    event.preventDefault(); // Stop form submission
+                    errorMessage.textContent = "Password must be at least 8 characters long!";
+                    return;
+                }
+
+                if (password.value !== confirmPassword.value) {
+                    event.preventDefault(); // Stop form submission
+                    errorMessage.textContent = "Passwords do not match!";
+                }
+            });
+        });
+    </script>
+</body>
+</html>
