@@ -3,6 +3,41 @@
 <head><title>Dashboard</title></head>
 <body>
     <h1>Hello, {{ name }}</h1>
+    <h2>Task Manager</h2>
+
+    <form action="/add_task" method="POST">
+        <input type="text" name="task" placeholder="Enter a task here..." required>
+        <button type="submit">Add Task</button>
+    </form>
+
+    <ul id="task-list">
+        {% for task in tasks %}
+            <li>
+                <p>{{ task.text }} 
+                    <form action="/delete_task/{{ task.id }}" method="POST" style="display:inline;">
+                        <button type="submit">Delete</button>
+                    </form>
+                </p>
+
+                <form action="/add_subtask/{{ task.id }}" method="POST">
+                    <input type="text" name="subtask" placeholder="Add a subtask" required>
+                    <button type="submit">Add Subtask</button>
+                </form>
+
+                {% if task.subtasks %}
+                    <ul>
+                        {% for subtask in task.subtasks %}
+                            <li>{{ subtask.text }}
+                                <form action="/delete_task/{{ subtask.id }}" method="POST" style="display:inline;">
+                                    <button type="submit">Delete</button>
+                                </form>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
     <a href="{{ url_for('logout') }}"><button>Logout</button></a>
     <a href="{{ url_for('delete_account') }}"><button>Delete Account</button></a>
 </body>

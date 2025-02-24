@@ -38,6 +38,19 @@ class User(db.Model, UserMixin):
     verified = db.Column(db.Boolean, default=False)
     verification_code = db.Column(db.String(128), nullable=True)
 
+class Todo(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # User ID (foreign key to User table)
+    type = db.Column(db.String(50), nullable=False)
+    enddate = db.Column(db.DateTime, nullable=True)
+    parent_id = db.Column(db.Integer, db.ForeignKey('todo.id'), nullable=True)  # Parent todo item (optional, for subtasks)
+    text = db.Column(db.String(500), nullable=False) 
+
+    # Relationships to other tables
+    user = db.relationship('User', backref=db.backref('todos', lazy=True))  # Relationship with the User table
+    parent = db.relationship('Todo', remote_side=[id], backref=db.backref('subtasks', lazy=True))  # Self-referencing relationship for subtasks
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -51,7 +64,8 @@ def home():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    return render_template('dashboard.html', name=current_user.name)
+    tasks = Todo.query.filter_by(parent_id=None).all()
+    return render_template('dashboard.html', name=current_user.name, tasks=tasks)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -185,6 +199,45 @@ def delete_account():
     logout_user()
     flash("Your account has been deleted.", "success")
     return redirect(url_for('home'))
+
+
+
+
+
+@app.route('/add_task', methods=['POST'])
+def add_task():
+    task_text = request.form.get('task')
+    new_task = Todo(
+        user_id=1,  # Assuming the current user ID is 1
+        type="task",
+        text=task_text,
+        enddate=None  # Optional, set your logic for enddate
+    )
+    db.session.add(new_task)
+    db.session.commit()
+    return redirect(url_for('index'))
+
+@app.route('/add_subtask/<task_id>', methods=['POST'])
+def add_subtask(task_id):
+    subtask_text = request.form.get('subtask')
+    new_subtask = Todo(
+        user_id=1,  # Assuming the current user ID is 1
+        type="subtask",
+        text=subtask_text,
+        parent_id=task_id,  # Link to the parent task
+        enddate=None  # Optional
+    )
+    db.session.add(new_subtask)
+    db.session.commit()
+    return redirect(url_for('index'))
+
+@app.route('/delete_task/<task_id>', methods=['POST'])
+def delete_task(task_id):
+    task = Todo.query.get(task_id)
+    if task:
+        db.session.delete(task)
+        db.session.commit()
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     with app.app_context():
